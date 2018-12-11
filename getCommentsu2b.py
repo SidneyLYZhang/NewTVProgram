@@ -26,14 +26,4 @@ https://developers.google.com/api-client-library/python/guide/aaa_client_secrets
 """ % os.path.abspath(os.path.join(os.path.dirname(__file__),
                                    CLIENT_SECRETS_FILE))
 
-
-
-def main():
-  service = build('translate', 'v2', developerKey='AIzaSyC6WerHxYiaEcqE0eHLEZ6kgJ2KJzEEUks')
-  print(service.translations().list(
-      source='en',
-      target='fr',
-      q=['flower', 'car']
-    ).execute())
-
-main()
+s
