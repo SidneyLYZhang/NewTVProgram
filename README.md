@@ -6,3 +6,10 @@ Who is NewTV? It's one of CCTV's subsidiaries. So It's a State-owned Enterprise.
 So I go to there, Working and learning, and waiting for a BIG chance to break through the limitation.
 
 Sagne mich ... ... ...
+
+
+******
+
+Work List:
+
+1. Getting Comment-data from YouTube
