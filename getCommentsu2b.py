@@ -22,8 +22,23 @@ found at:
 with information from the APIs Console
 https://console.developers.google.com
 For more information about the client_secrets.json file format, please visit:
-https://developers.google.com/api-client-library/python/guide/aaa_client_secrets
+https://developers.google.com/api-client-library/python/guide/aaa_client_secretsel
 """ % os.path.abspath(os.path.join(os.path.dirname(__file__),
                                    CLIENT_SECRETS_FILE))
 
-s
+def get_authenticated_service(args):
+   flow = flow_from_clientsecrets(CLIENT_SECRETS_FILE, scope=YOUTUBE_READ_WRITE_SSL_SCOPE,
+      message=MISSING_CLIENT_SECRETS_MESSAGE)
+   
+   storage = Storage("%s-oauth2.json" % sys.argv[0])
+   credentials = storage.get()
+   
+   if credentials is None or credentials.invalid:
+      credentials = run_flow(flow, storage, args)
+      
+   # Trusted testers can download this discovery document from the developers page
+   # and it should be in the same directory with the code.
+   with open("youtube-v3-discoverydocument.json", "r") as f:
+      doc = f.read()
+      return build_from_document(doc, http=credentials.authorize(httplib2.Http()))
+
