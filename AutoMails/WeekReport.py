@@ -11,6 +11,7 @@ from email.mime.image import MIMEImage
 
 #设置登录及服务器信息,并设置email信息
 def get_email(tips,titles,password):
+    #基础信息
     mail_host = 'smtp.exmail.qq.com'
     mail_user = '张良益'
     mail_pass = password
@@ -32,6 +33,9 @@ def get_email(tips,titles,password):
         msg['Cc'] = ccADDR
     msg['Subject'] = titles
     #推荐使用html格式的正文内容，这样比较灵活，可以附加图片地址，调整格式等
+
+
+
 with open('abc.html','r') as f:
     content = f.read()
 #设置html格式参数
@@ -59,6 +63,7 @@ message.attach(picture)
 #登录并发送
 try:
     smtpObj = smtplib.SMTP()
+    smtpObj.set_debuglevel(1)
     smtpObj.connect(mail_host,25)
     smtpObj.login(mail_user,mail_pass)
     smtpObj.sendmail(
