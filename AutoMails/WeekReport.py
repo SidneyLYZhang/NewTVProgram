@@ -1,23 +1,7 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
+# https://blog.csdn.net/weixin_35955795/article/details/52881044
 
-import sys
-import argparse as argset
-import smtplib
-from email.mime.text import MIMEText
-from email.mime.multipart import MIMEMultipart
-from email.mime.image import MIMEImage
-
-#设置email
-def get_email(tips,titles,files,password):
-    #基础信息
-    mail_host = 'smtp.exmail.qq.com'
-    mail_user = '张良益'
-    mail_pass = password
-    sender = ' '
-    toADDR = ['h net']
-    ccADDR = ['ji .net']
-    
     #添加一个MIMEmultipart类，处理正文及附件
     msg = MIMEMultipart('alternative')
     msg['From'] = sender
