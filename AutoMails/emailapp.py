@@ -10,6 +10,7 @@ import toml
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 from email.mime.image import MIMEImage
+from email.header import Header
 from email.utils import parseaddr, formataddr
 
 # 定义一个主函数异常
@@ -40,9 +41,14 @@ def getServer(config, mailtype):
 # 标准化用户邮件地址的格式
 def standardAddr(addr, name):
     sd_add = []
+    result = []
     if isinstance(addr,list):
         for i in range(0,len(addr)-1):
-            sd_add.insert(len(sd_add),)
+            sd_add.insert(len(sd_add),name[i] + " <%s>" % addr[i])
+    for i in sd_add:
+        name,addr = parseaddr(i)
+        result.insert(len(result),formataddr((Header(name, "utf-8").encode(), addr))
+    return(";".join(result))
 
 # 解析邮件主体内容
 def getContents(mailfile):
@@ -50,7 +56,7 @@ def getContents(mailfile):
         txtmail = f.read()
     dic = toml.loads(txtmail.decode('utf8'))
     result = {}
-    result['To'] = 
+    result['To'] = standardAddr()
     return(result)
     
 # 邮件发送主体
