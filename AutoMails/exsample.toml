@@ -1,21 +1,22 @@
 # to与content是必须包含的内容，cc、bcc是可选的。
 # 子键值name是可选的。
 # 邮件语言 language 的选择需要与配置文件中的user.name下的子键保持一直，如果不一致，虽然不会报错，但会以罗列顺序的第一个作为user的名字使用。
+# content部分的
 language = 'zh'
 [to]
-	addr = ['邮箱地址']
-	name = ['收件人名称']
+	addr = ['邮箱地址@1','邮箱地址@2','邮箱地址@3','...']
+	name = ['收件人名称1','收件人名称2','收件人名称3','...']
 [cc]
-	addr = ['抄送邮箱地址']
-	name = ['抄送人名称']
+	addr = ['抄送邮箱地址1','抄送邮箱地址2','.....']
+	name = ['抄送人名称','抄送人名称','.....']
 [bcc]
-	addr = ['抄送邮箱地址']
-	name = ['抄送人名称']
+	addr = ['密抄邮箱地址','......']
+	name = ['密抄人名称','......']
 [content]
 	title = '邮件标题'
 	text = '邮件正文'
-	type = 'html/plain'
-    tail = '签名信息（type/内容）'
+	type = 'plain'
+    tail = 'plain/Sidney Zhang'
 # 以下除了主标题不可更改，子键名可按需更改，或增加内容
 [appendix]
 	part1 = '本地文件位置'
