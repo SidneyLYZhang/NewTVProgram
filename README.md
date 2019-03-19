@@ -13,4 +13,4 @@ Sagne mich ...
 Work List:
 
 1. Getting Comment-data from YouTube
-2. Sending Email with Pathon (simple - sendemail / full - EmailAPP)
+2. Sending Email with Pathon (simple - sendemail / full - AutoMails)

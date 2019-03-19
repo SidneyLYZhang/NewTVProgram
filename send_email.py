@@ -7,6 +7,8 @@ import smtplib
 import argparse
 import time
 import os
+import json
+import urllib.request as urlreq
 import datetime as dte
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
@@ -91,6 +93,7 @@ if __name__ == "__main__":
 	    # 发送
 	    smtpObj.sendmail(sender, receivers, msg.as_string())
 	    print('Success!成功了!还不快欢呼！')
+		print(getYiyan())
 	    # 退出登录
 	    smtpObj.quit()
 	except smtplib.SMTPException as e:
