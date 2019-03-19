@@ -38,6 +38,14 @@ def getFiles(marks, start = None, place = None):
 		res = res + prep + ffile
 	return(res)
 
+# 有趣的结束信息——基于一言API
+def getYiyan():
+    page = urlreq.urlopen("https://v1.hitokoto.cn/")
+    text = page.read()
+    text = text.decode("UTF-8")
+    text = json.loads(text)
+    return(text['hitokoto'] + " —— " + text['from'])
+
 ## 主程序：用个参数选择多样一些。。。。
 if __name__ == "__main__":
 	parser = argparse.ArgumentParser(description = "发送文件给固定人...")
