@@ -1,10 +1,10 @@
 import filecmp
 import os
 
-patho = 'C:/Users/alfch/Desktop/Images/'
-patht = 'C:/Users/alfch/Desktop/Images - 副本/'
+patho = '~/Desktop/Images/'
+patht = '~/Desktop/Images - 副本/'
 
-cf = open("C:/Users/alfch/Desktop/name.txt","w")
+cf = open("~/Desktop/name.txt","w")
 
 for root, dirs, files in os.walk(patho):
     for pic in files:

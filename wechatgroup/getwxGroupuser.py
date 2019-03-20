@@ -11,7 +11,7 @@ def mkdir(path):
     return('OK')
 
 if __name__ == '__main__':
-    thePath = 'C:/Users/alfch/Desktop/Images/groupuser/'
+    thePath = '~/Desktop/Images/groupuser/'
     mkdir(thePath)
     itchat.auto_login(True)
     mpsList=itchat.get_chatrooms(update=True)
