@@ -14,3 +14,4 @@ Work List:
 
 1. Getting Comment-data from YouTube
 2. Sending Email with Pathon (simple - sendemail / full - AutoMails)
+3. group-users from wechat
