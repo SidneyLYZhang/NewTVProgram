@@ -1,34 +1,57 @@
 '''
+    ==============================================================================================
+    YouTube频道用户偏好分析 —— 简略版本
+    ==============================================================================================
+    
     @SidneyZhang 2019.04.08
 
-    这个程序主要解决YouTube上节目名称与用户喜好之间的偏好关系。
-    并非基于模型的偏好求解，这里关注的核心是用户偏好的逻辑形态与可解释性逼近。未达到这一目的，近义词、词性、
-    情感偏好都是需要考虑的。
+    这个程序主要期望用于解决YouTube上节目名称与用户喜好之间的偏好关系。
+
+    并非基于模型的偏好求解，而是关注用户偏好的逻辑形态与可解释性逼近。为达到这一目的，近义词、词性、情感偏好
+    都是需要考虑的。同时，为了减少代码量，主题模型使用现有技术模型，不另作重复。
+
     一般来说，用户偏好是由用户行为反映出来的统计特征；而YouTube很简洁的用点赞与点踩两个行为为用户偏好做了标
-    记，同时这些标记必然来自于较为忠诚的用户，    这个"忠诚"可以是对YouTube的，也可以是对这个频道的，因为不
-    需要准确区分用户所忠诚的对象，只需要了解这个用户的行为反映了这个忠实用户的偏好就可以了。
+    记，同时这些标记必然来自于较为忠诚的用户，这个"忠诚"可以是对YouTube的，也可以是对这个频道的，因为不需要
+    准确区分用户所忠诚的对象，只需要了解这个用户的行为反映了这个忠实用户的偏好就可以了。
     
     如何提取用户偏好呢？
+
     1. 文本的关键词：
+
     借助节目文本的总和，提取出关键词，利用关键词结合点赞/点踩频次生成词云，确定不同频道的核心偏好。主要借助 
     SnowNLP 的分词与关键词能力。
+
     2. 比较标题文本的近似程度：
-    文本之间的相似性，利用Word2Vec比较不同节目标题文本之间的相似性，结合点赞/点踩的加权行为，可以生成不同来源
-    频道的运营区隔程度，或者说是节目的内在共通程度。主要借助 Synonyms 进行向量化比较。
+
+    文本之间的相似性，利用Word2Vec比较不同节目标题文本之间的相似性，结合点赞/点踩的加权行为，可以生成不同来
+    源频道的运营区隔程度，或者说是节目的内在共通程度。主要借助 Synonyms 进行向量化比较。
+
     3. 关键词的相似度：
+
     比较关键词之间的联系，进一步集中用户选择和核心趋向。主要借助 Synonyms 进行向量化的近义词比较。
+
     4. 节目标题的情绪与用户选择：
+
     节目标题的情绪与用户的选择，可以导出用户进行标记的情绪基点，从而明确已收视用户行为偏好。主要借助 SnowNLP 
     的情绪化分析完成相关内容。
     
     核心方法来自于已建立好的NLP模型，使用对自然语言的分析，完成上述关键的分析过程。
 
+    仅这件事而言，应该加入视频中所有的对话、旁白等音频文本，但限于无法拿到对应视频进行文本识别，所以仅依赖外
+    部已有的人工标题作为原始视频语义的近似。同时，由于没有时间进一步进行深层文本含义的对比，以及文本序列模式
+    的分析，所以也导致用户行为所体现的意义可能存在偏移，用户的喜好也无法进一步分解。综上，这里所期望解决的，
+    仅为初步的结论，甚至说只是粗糙的前置分析框架。
+
+    -------------------------------------------------------------------------------------------------
+
     参考：
+
     1. [SnowNLP](https://github.com/isnowfy/snownlp)
     2. [Synonyms](https://github.com/huyingxi/Synonyms)
     3. [悟乙己 : 六款中文分词模块尝试](https://blog.csdn.net/sinat_26917383/article/details/77067515)
 
     授权信息：
+
     @online{Synonyms:hain2017,
         author = {Hai Liang Wang, Hu Ying Xi},
         title = {中文近义词工具包Synonyms},
@@ -38,24 +61,97 @@
     }
 '''
 
+# AUTHOR  : Sidney Zhang <ly.zhang.1985@gmail.com> <twitter@sidneyzhang>
+# LICENSE : MIT License
+
 # MODELS
 
 from snownlp import SnowNLP
-import synonyms as snons
+import os
+import pandas as pd
+import math
+import numpy as np
+from pampy import match, TAIL, _
 
-# TEST
+# INFORMATIOPNS
 
-print(__doc__)
+def info_here():
+    i = os.system("cls")
+    print(__doc__)
 
-text = '''
-    国际上对词语相似度算法的评价标准普遍采用 Miller&Charles 发布的英语词对集的人工判定值。
-    该词对集由十对高度相关、十对中度相关、十对低度相关共 30 个英语词对组成,然后让38个受试者对这30对进行语义相关度判断，
-    最后取他们的平均值作为人工判定标准。然后不同近义词工具也对这些词汇进行相似度评分，与人工判定标准做比较，比如使用皮尔森相关系数。
-    在中文领域，使用这个词表的翻译版进行中文近义词比较也是常用的办法。
-    '''
+# TEXT FOR ANALYSIS
 
-s = SnowNLP(text)
+def getDatas(fnames): #getting datas from csv-files
+    snames = list(map(lambda x : x + '.csv', fnames))
+    res = list(map(lambda x : pd.read_csv(x, header = None, sep = ','), snames))
+    return(dict(zip(fnames, res)))
 
-print(s.keywords(4))
+def vecMag(vs): #computing magnitude of vector
+    return(pow(sum(list(map(lambda x : x ** 2, vs))),1/2)/len(vs))
 
-print(snons.seg(text))
+def getSimilar(senc1, senc2): #computing similarity for two strings-lists
+    resu = list(map(lambda x : np.mean(SnowNLP(senc2).sim(x)), senc1))
+    return(resu)
+
+def namePair(lnames): #getting pairs of filenames for composing
+    return(
+        match(
+            lnames,
+            [str, str], lambda a,b : [(a, b)] ,
+            [str, TAIL], lambda a,t : list(map(lambda x : (a, x), t)) + namePair(t)
+        )
+    )
+
+def putStrlist(names, data): #getting the corresponding text
+    return(
+        dict(
+            zip(names, list(map(lambda x : list(data[x][0]) , names)))
+        )
+    )
+
+def zipStrdata(fnames, strdts, datas): #sorting text and weighted data
+    return(
+        dict(zip(
+            fnames,
+            list(map(lambda x : list(zip(strdts[x], list(datas[x][1]))) , fnames))
+        ))
+    )
+
+def getKeywords(fnames, strdts, datas): #basic keywords processor
+    orig = zipStrdata(fnames, strdts, datas)
+    orikey = dict(zip(fnames, list(map(
+        lambda x : list(map(lambda y : SnowNLP(y[0]).keywords(2) + [y[1]] , orig[x])),
+        fnames
+    ))))
+    return(orikey)
+
+def compressKeywords(orikey): #compressing keywords-lists
+    labels = ['o','t','w']
+    pd.DataFrame.from_records(orikey[x], columns=labels)
+
+def sentiPreference(fnames, strdts, datas): #handling user sentiment trends
+    orig = zipStrdata(fnames, strdts, datas)
+    okposi = dict(zip(fnames, list(map(
+        lambda x : list(map(lambda y : (SnowNLP(y[0]).sentiments * y[1] , y[1]) , orig[x])),
+        fnames
+    ))))
+    return(okposi)
+
+# MAINSPROGRAM
+
+if __name__ == "__main__":
+    filesname = ['REBO', 'QINGGAN', 'SHAONV', 'TUHAO']
+    dts = getDatas(filesname)
+    strDic = putStrlist(filesname, dts)
+    nameTwins = namePair(filesname)
+    first_result = dict(zip(
+        list(map(lambda x : " - ".join(x) , nameTwins)), 
+        list(map(lambda x : getSimilar(strDic[x[0]],strDic[x[1]]) , nameTwins))
+    ))
+    first_result = dict(zip(
+        list(first_result.keys()),
+        list(map(lambda x : vecMag(first_result[x]) , list(first_result.keys())))
+    )) #a.t.p. getting similarity of each channel
+    resultfile = pd.DataFrame.from_dict(first_result, orient='index')
+    resultfile.to_csv('similar_channel.csv')
+    info_here()
