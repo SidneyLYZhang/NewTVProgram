@@ -1,7 +1,7 @@
 '''
-    ==============================================================================================
-    YouTube频道用户偏好分析 —— 简略版本
-    ==============================================================================================
+    =============================================================================================================
+    YouTube频道用户偏好分析 —— 超简略版
+    =============================================================================================================
     
     @SidneyZhang 2019.04.08
 
@@ -42,7 +42,7 @@
     的分析，所以也导致用户行为所体现的意义可能存在偏移，用户的喜好也无法进一步分解。综上，这里所期望解决的，
     仅为初步的结论，甚至说只是粗糙的前置分析框架。
 
-    -------------------------------------------------------------------------------------------------
+    --------------------------------------------------------------------------------------------------------------
 
     参考：
 
@@ -127,7 +127,29 @@ def getKeywords(fnames, strdts, datas): #basic keywords processor
 
 def compressKeywords(orikey): #compressing keywords-lists
     labels = ['o','t','w']
-    pd.DataFrame.from_records(orikey[x], columns=labels)
+    fname = list(orikey.keys())
+    mittel = dict(zip(
+        fname,
+        list(map(lambda x : pd.DataFrame.from_records(orikey[x], columns=labels) , fname))
+    ))
+    uniall = dict(zip(
+        fname,
+        list(map(lambda x : list(pd.Series(list(mittel[x]['o'].unique()) + list(mittel[x]['t'].unique())).unique()), 
+                fname))
+    ))
+    result = dict(zip(
+        fname,
+        list(map(
+            lambda x : list(zip(
+                uniall[x],
+                list(np.sum([list(map(lambda y : mittel[x].loc[mittel[x]['o'] == y].w.sum() , uniall[x])),
+                        list(map(lambda z : mittel[x].loc[mittel[x]['t'] == z].w.sum() , uniall[x]))],
+                        axis = 0))
+            )),
+            fname
+        ))
+    ))
+    return(result)
 
 def sentiPreference(fnames, strdts, datas): #handling user sentiment trends
     orig = zipStrdata(fnames, strdts, datas)
@@ -137,13 +159,20 @@ def sentiPreference(fnames, strdts, datas): #handling user sentiment trends
     ))))
     return(okposi)
 
+def sumTulist(orid): #computing sum of each element in tuple-list
+    return((sum(list(map(lambda x : x[0] , orid))) , sum(list(map(lambda x : x[1] , orid)))))
+
 # MAINSPROGRAM
 
 if __name__ == "__main__":
+    #before everything
     filesname = ['REBO', 'QINGGAN', 'SHAONV', 'TUHAO']
     dts = getDatas(filesname)
     strDic = putStrlist(filesname, dts)
     nameTwins = namePair(filesname)
+    info_here()
+    #startting to analysis
+    #1
     first_result = dict(zip(
         list(map(lambda x : " - ".join(x) , nameTwins)), 
         list(map(lambda x : getSimilar(strDic[x[0]],strDic[x[1]]) , nameTwins))
@@ -154,4 +183,22 @@ if __name__ == "__main__":
     )) #a.t.p. getting similarity of each channel
     resultfile = pd.DataFrame.from_dict(first_result, orient='index')
     resultfile.to_csv('similar_channel.csv')
-    info_here()
+    #2
+    second_result = sentiPreference(filesname,strDic,dts)
+    second_result = dict(zip(
+        filesname,
+        list(map(lambda x : sumTulist(second_result[x]) , filesname))
+    ))
+    second_result = dict(zip(
+        filesname,
+        list(map(lambda x : second_result[x][0]/second_result[x][1] , filesname))
+    )) #a.t.p. getting sensitivity of each channel
+    resultfile = pd.DataFrame.from_dict(second_result, orient='index')
+    resultfile.to_csv('senti_channel.csv')
+    #3
+    third_result = getKeywords(filesname,strDic,dts)
+    third_result = compressKeywords(third_result)
+    for i in filesname:
+        resultfile = pd.DataFrame.from_records(third_result[i])
+        resultfile.to_csv('keywors_'+ i +'.csv')
+    
