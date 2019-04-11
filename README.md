@@ -14,4 +14,6 @@ Work List:
 
 1. Getting Comment-data from YouTube
 2. Sending Email with Pathon (simple - sendemail / full - AutoMails)
-3. group-users from wechat
+3. Group-users from wechat
+4. Text Analysis for Channels of YouTube —— Sample
+5. *(incoming)* User Classification Method for Internet-TV
