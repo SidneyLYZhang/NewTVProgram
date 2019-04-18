@@ -17,3 +17,4 @@ Work List:
 3. Group-users from wechat
 4. Text Analysis for Channels of YouTube —— Sample
 5. *(incoming)* User Classification Method for Internet-TV
+6. Consistency Test (Command Line Tool in python)
