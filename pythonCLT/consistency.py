@@ -87,8 +87,14 @@ def amend(samp, floornum):
     else :
         return(samp)
 
+def okType(x):
+    if 'int' in str(type(x)):
+        return(int(x))
+    else :
+        return(str(x))
+
 def kappa(datas):
-    dns = list(map(lambda x : int(x), list(datas.columns.values)))
+    dns = list(map(lambda x : okType(x), list(datas.columns.values)))
     if datas.shape[1] > 2 :
         pns = namePair(dns)
         res = dict(zip(
