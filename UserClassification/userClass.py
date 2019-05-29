@@ -33,6 +33,8 @@
     ----------------------------------------------------------------------------------------------------------------
 
     参考文献：
+    1. https://scikit-learn.org/stable/modules/generated/sklearn.datasets.fetch_california_housing.html#sklearn.datasets.fetch_california_housing
+    2. https://archive.ics.uci.edu/ml/datasets/Wine
 
     ----------------------------------------------------------------------------------------------------------------
 
@@ -90,7 +92,7 @@ def info_here():
 
 def hasDir(pladir): #use to determine if there is a existing path
     if '/' in pladir :
-        lastSlash = [i.Start() for i in re.finditer('/', pladir)][-1]
+        lastSlash = [i.start() for i in re.finditer('/', pladir)][-1]
         return(os.path.isdir(pladir[0:lastSlash]))
     else :
         return(False)
@@ -98,7 +100,7 @@ def hasDir(pladir): #use to determine if there is a existing path
 def getCSVData(fileloc): #getting datas from csv-file
     if hasDir(fileloc):
         print()
-    else :
+    else : #loading uci wine dataset
         pass
 
 # MAINPROGRAM
