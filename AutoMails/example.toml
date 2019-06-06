@@ -1,0 +1,56 @@
+# Email 配置文件
+# 用户信息
+# password指用户邮箱的登录密码，有的邮箱需要使用专用密码，请按照邮箱提供网站的使用指引填写密码。
+# 如果你之前登陆过，可以仅使用email与passkeys两个属性自动加载已保存信息。
+[information]
+    name = "名字"
+    email = "user@user.com"
+    password = '1234567890'
+    passkeys = '000000'
+    # EmailSMTP信息
+    host = "smtp.company.com"
+    port = 465
+    # 是否保存登录信息
+    log = 'False'
+# 邮件内容
+[email]
+    # 收件人
+    To = ['topeason@xxx.com', '...@xxx.com']
+    To_name = ['peason', '...']
+    # 抄送
+    Cc = ['cc@cc.com', 'c...@cc.com']
+    Cc_name = ['Cc', 'c...'']
+    # 密件抄送
+    Bcc = ['bcc@bcc.com', 'bcc2@bcc2.com']
+    Bcc_name = ['Bcc','Bcc2']
+    # 标题
+    Subject = 'Emails Title'
+    # 邮件正文
+    context = '''
+    user, hi!
+    hello world! From python！
+    '''
+    # 正文类型，仅支持plain与html两种
+    type = 'plain'
+    # 附件
+    attachment = ['~\file.txt', '~\file2.xxx']
+    # 如须在邮件正文中显示图片，需要使用image添加图片附件，并在需要展示图片位置使用‘<img src="cid:image*">’标出。
+    # 其中，‘*’表示添加的图片顺序。如没有在正文中添加标识，自动把图片变为普通附件发送。
+    image = ['~\xxx.png','~\xxx.jpg']
+# 邮件的签名部分
+[tail]
+    # 签名标识
+    name = 'Names'
+    # 签名内容
+    context = '''
+    <div>
+        <div><br><br><br>------------------</div>
+        <div style="font-size:14px;"><div>名字 &nbsp; &nbsp; <font size="2">Ming Zi</font></div>
+        <div><b>公司 &nbsp;&nbsp; 部门</b></div>
+        <div>电话：18622430733</div>
+        <div>电子邮件：<a href="mailto:user@user.net" target="_blank">user@user.net</a></div>
+        <div><img src="cid:image1"></div>
+    </div>
+    '''
+    # 是否要保存这个签名档，True为要保存，False为不要保存。不使用save关键词的时候，默认为不保存。
+    save = 'True'

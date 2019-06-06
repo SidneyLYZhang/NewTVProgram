@@ -15,6 +15,9 @@
     b. 登录信息保存于读取模块
     c. 邮件内容构造模块
     d. 邮件发送模块
+
+    因为我确实比较懒，所以没有对这个小玩意做任何拆分，把一切都写在了一起。所以， 
+    除非你很闲，不用看具体代码完全可以。看一下使用说明就好。
 '''
 
 # AUTHOR    : Liangyi ZHang <zly@lyzhang.me>
@@ -35,26 +38,41 @@
 #    For more information on this, and how to apply and follow the GNU
 #    GPL, see https://www.gnu.org/licenses/.
 
-#!/usr/bin/python
-# -*- coding: utf-8 -*-
+# REFERENCES
+#    1. https://github.com/CITGuru/PyInquirer
+#    2. 
 
-# 脚本配置与email撰写格式请见对应文件，或阅读README.md
+# INSTRUCTION MANUAL
+#    1. Explanation for Configuration of Email 配置文件说明
+#    2. Getting Help 获取帮助
 
 # PACKAGES
 
 import os
+import re
+import six
 import sys
-import click
-import smtplib
 import toml
-import colorama
+import time
+import click
 import base64
+import smtplib
 import hashlib
-from email.mime.text import MIMEText
-from email.mime.multipart import MIMEMultipart
-from email.mime.image import MIMEImage
+import colorama
+import datetime as dte
+
+# REQUESTS
+
+from termcolor import colored
 from email.header import Header
+from pyfiglet import figlet_format
+from examples import custom_style_2
+from email.mime.text import MIMEText
+from email.mime.image import MIMEImage
 from email.utils import parseaddr, formataddr
+from email.mime.multipart import MIMEMultipart
+from PyInquirer import style_from_dict, Token, prompt
+from __future__ import print_function, unicode_literals
 
 # CLASSES
 
@@ -63,11 +81,30 @@ class fileCryptor(object):
     def __init__(self, address, Keys):
         self.crukey = Keys
         self.sirkey = address
+        self.datas = {
+            'password' : '0',
+            'host' : '0.0.0.0:0',
+            'name' : 'Name Name',
+            'tail' : {'default' : '<div>' + str(dte.date.today()) + '</div>'}
+        }
     
-    def fileEncryptor(self, strText):
+    def __data_translate(self, oriData = None):
+        if not oriData:
+            tip = list(self.datas.values())[:-1]
+            tip = tip + list(map(lambda x : x + '/<-GAP->/' + self.datas['tail'][x] , self.datas['tail'].keys()))
+        else :
+            tip = ['password', 'host', 'name']
+            tip = dict(zip(tip, oriData[0:3]))
+            tip['tail'] = dict(list(map(lambda x : x.split('/<-GAP->/') , oriData[3:])))
+            tip['tail']['default'] = '<div>' + str(dte.date.today()) + '</div>'
+            self.upgrade(tip)
+        return(tip)
+    
+    def fileEncryptor(self):
         enkey = base64.encodestring(bytes(self.crukey, 'utf-8'))
         encryText = [hashlib.md5(enkey).hexdigest()]
         filename = hashlib.md5(bytes(self.sirkey, 'utf-8')).hexdigest()
+        strText = self.__data_translate()
         encryText = encryText + list(map(lambda x : rc4(self.crukey, x).encrypt() , strText))
         filewritor = open('data/' + filename + '.databox', 'w')
         for i in encryText:
@@ -88,7 +125,32 @@ class fileCryptor(object):
                     result = 'Wrong Password!'
                 else :
                     result = list(map(lambda x : rc4(self.crukey, x).decrypt() , lines[1:]))
+                    result = self.__data_translate(result)
         return(result)
+    
+    def upgrade(self, keydata):
+        tk_keys = ['password','host','name']
+        tk_data = dict([(k,keydata.get(k,None)) for k in tk_keys])
+        self.datas.update(tk_data)
+        self.datas['tail'].update(keydata['tail'])
+
+    @classmethod
+    def fileValid(addr, keys):
+        enkey = base64.encodestring(bytes(keys, 'utf-8'))
+        verific = hashlib.md5(enkey).hexdigest()
+        filename = hashlib.md5(bytes(addr, 'utf-8')).hexdigest()
+        if not os.path.exists('data/' + filename + '.databox'):
+            ref = False
+            rek = False
+        else :
+            ref = True
+            with open('data/' + filename + '.databox', 'r') as filed:
+                lines = filed.readlines()
+                if verific != lines[0][:-1] :
+                    rek = False
+                else :
+                    rek = True
+        return(ref, rek)
 
 # RC4 Cryptographic Tool
 class rc4(object):
@@ -154,8 +216,20 @@ class emailText(object):
     def addSender(self, mailaddr, name):
         self.sender = "%s <%s>" % (name, mailaddr)
         self.massages["From"] = "%s <%s>" % (name, mailaddr)
+    
+    def addRecipient(self, mailaddr, name):
+        pass
 
-    def addAttachment(self):
+    def addCc(self, mailaddr, name):
+        pass
+    
+    def addBcc(self, mailaddr, name):
+        pass
+    
+    def addContent(self, mailaddr, name):
+        pass
+    
+    def addAttachment(self, mode, fileplace):
         pass
 
 # Email App Creator
@@ -171,7 +245,7 @@ class emailApp(object):
         try:
             insv = smtplib.SMTP_SSL(self.link, self.host)
             insv.login(self.address, self.password)
-            insv.sendmail(mailtxt.sender, )
+            insv.sendmail(mailtxt.sender)
         except smtplib.SMTPException as e:
 	        print(e)
 
@@ -181,12 +255,101 @@ colorama.init()
 
 # FUNCTIONS
 
-def getConfig():
-    pass
+def print__(text, color = 'yellow', font = 'slant', figlet = False):
+    '''
+    格式化输出函数
+    '''
+    if figlet :
+        six.print_(colored(figlet_format(text, font=font), color))
+    else:
+        six.print_(colored(text, color))
+
+
+def getConfig(cfpath):
+    '''
+    加载Toml配置文件函数
+    '''
+    with open(cfpath, 'rb') as f:
+        content = f.read()
+    dic = toml.loads(content.decode('utf8'))
+    user_infor = dic['information']
+    in_email = dic['email']
+    tail_infor = dic['tail']
+    return(user_infor, in_email, tail_infor)
+
+def is_valid(rcT,addr):
+    '''
+    输入检验函数，基于正则化表示的检验
+    '''
+    ok_re = re.compile(rcT)
+    res = True if ok_re.match(addr) else False
+    return(res)
+
+def mailQuest():
+    mailre = r'^[a-zA-Z0-9\.\_]{1,25}@[a-zA-Z0-9]{2,20}\.[a-zA-Z\.]{2,7}$'
+    questions = [
+        {
+            'type' : 'input',
+            'name' : 'mailaddr',
+            'message' : '你准备使用哪一个邮箱发送邮件？\nA>>> ',
+            'validate' : lambda x : is_valid(mailre, x) or '这不是一个有效的邮箱地址，请检查后重新录入。'
+        }
+    ]
+    answers = prompt(questions, style=custom_style_2)
+    fileCryptor(answers['mailaddr'], answers[''])
+    return(answers)
+
+def configmailQuest():
+    urlre = r'^([a-zA-Z]{1,4}\.[a-zA-Z0-9\_\-]{1,25}\.[a-zA-Z0-9\.]{2,7}|(?:[0-9]{1,3}\.){3}[0-9]{1,3}):[0-9]{2,4}$'
+    questions = [
+        {
+            'type' : 'input',
+            'name' : 'smtpurl',
+            'message' : '请提供你所使用邮箱的SMTP服务器，一般可在你的邮箱设置中找到。\nA>>> ',
+            'default' : 'smtp.web.com:234',
+            'validate' : lambda x : is_valid(urlre, x) or '服务器地址无效，请按照“网址:端口”的格式录入。'
+        },
+        {
+            'type' : 'password',
+            'name' : 'passwords',
+            'message' : '请输入邮箱登陆密码：\nA>>> '
+        }
+    ]
+    answers = prompt(questions, style=custom_style_2)
+    answers['smtpurl'] = answers['smtpurl'].split(':')
+    answers['smtpurl'][1] = int(answers['smtpurl'][1])
+    return(answers)
+
+def passkeyQuenst():
+    questions = [
+        {
+            'type' : 'password',
+            'name' : 'passkey',
+            'massage' : '\nA>>>'
+        }
+    ]
+    answers = prompt(questions, style=custom_style_2)
+    return(answers)
 
 # COMMANDTOOL
+
+@click.command()
+@click.option('--email', default = '',
+                help = '直接使用你的邮箱地址。')
+@click.option('--passkey', default = '000000',
+                help = '如果你曾经使用这个脚本登陆过你的邮箱，可使用当时设置的加密密码直接完成邮箱登录。')
+@click.option('--config', default = '.', type = click.Path(exists = True), 
+                help = '邮箱的配置文件，默认不选择。')
+def do_commend(email, passkey, config):
+    '''
+        Email Sender CLI in python...
+        v1.3.0
+        遵循GUN GPL3开源协议。
+        这个命令行程序
+    '''
+    pass
 
 # MAINSPROGRAM
 
 if __name__ == '__main__':
-    pass
+    do_commend()
