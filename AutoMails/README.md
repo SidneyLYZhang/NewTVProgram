@@ -67,44 +67,44 @@ user部分，需要写明邮箱信息，以便后续邮件发送。email部分�
 [information]
     name = "名字"
     email = "user@user.com"
-    password = '1234567890'
-    passkeys = '000000'
+    password = "1234567890"
+    passkeys = "000000"
     # EmailSMTP信息
     host = "smtp.company.com"
     port = 465
     # 是否保存登录信息
-    log = 'False'
+    log = "False"
 # 邮件内容
 [email]
     # 收件人
-    To = ['topeason@xxx.com', '...@xxx.com']
-    To_name = ['peason', '...']
+    To = ["topeason@xxx.com", "...@xxx.com"]
+    To_name = ["peason", "..."]
     # 抄送
-    Cc = ['cc@cc.com', 'c...@cc.com']
-    Cc_name = ['Cc', 'c...'']
+    Cc = ["cc@cc.com", "c...@cc.com"]
+    Cc_name = ["Cc", "c...""]
     # 密件抄送
-    Bcc = ['bcc@bcc.com', 'bcc2@bcc2.com']
-    Bcc_name = ['Bcc','Bcc2']
+    Bcc = ["bcc@bcc.com", "bcc2@bcc2.com"]
+    Bcc_name = ["Bcc","Bcc2"]
     # 标题
-    Subject = 'Emails Title'
+    Subject = "Emails Title"
     # 邮件正文
-    context = '''
+    context = """
     user, hi!
     hello world! From python！
-    '''
+    """
     # 正文类型，仅支持plain与html两种
-    type = 'plain'
+    type = "plain"
     # 附件
-    attachment = ['~\file.txt', '~\file2.xxx']
+    attachment = ["~\file.txt", "~\file2.xxx"]
     # 如须在邮件正文中显示图片，需要使用image添加图片附件，并在需要展示图片位置使用‘<img src="cid:image*">’标出。
     # 其中，‘*’表示添加的图片顺序。如没有在正文中添加标识，自动把图片变为普通附件发送。
-    image = ['~\xxx.png','~\xxx.jpg']
+    image = ["~\xxx.png","~\xxx.jpg"]
 # 邮件的签名部分
 [tail]
     # 签名标识
-    name = 'Names'
+    name = "Names"
     # 签名内容
-    context = '''
+    context = """
     <div>
         <div><br><br><br>------------------</div>
         <div style="font-size:14px;"><div>名字 &nbsp; &nbsp; <font size="2">Ming Zi</font></div>
@@ -113,9 +113,9 @@ user部分，需要写明邮箱信息，以便后续邮件发送。email部分�
         <div>电子邮件：<a href="mailto:user@user.net" target="_blank">user@user.net</a></div>
         <div><img src="cid:image1"></div>
     </div>
-    '''
+    """
     # 是否要保存这个签名档，True为要保存，False为不要保存。不使用save关键词的时候，默认为不保存。
-    save = 'True'
+    save = "True"
 ```
 
 配置文件的使用，就按照这个示例写就可以了。当然，如果你以前使用这个CLI登陆过Email并成功发过邮件，那么在 `[information]` 部分就不需要写很多信息了，只需要写email和passkeys就可以。比较重要的一点是，type支持两种模式，一个是plain一个是html，这个模式用于邮件正文的构建模式。

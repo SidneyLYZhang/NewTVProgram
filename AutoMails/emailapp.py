@@ -43,8 +43,8 @@
 #    2. 
 
 # INSTRUCTION MANUAL
-#    1. Explanation for Configuration of Email 配置文件说明
-#    2. Getting Help 获取帮助
+#    1. Explanation for Configuration of Email 配置文件说明(README.md)
+#    2. Getting Help 获取帮助(python emailapp.py --help)
 
 # PACKAGES
 
@@ -135,7 +135,7 @@ class fileCryptor(object):
         self.datas['tail'].update(keydata['tail'])
 
     @classmethod
-    def fileValid(addr, keys):
+    def fileValid(addr, keys = '000000'):
         enkey = base64.encodestring(bytes(keys, 'utf-8'))
         verific = hashlib.md5(enkey).hexdigest()
         filename = hashlib.md5(bytes(addr, 'utf-8')).hexdigest()
@@ -150,7 +150,10 @@ class fileCryptor(object):
                     rek = False
                 else :
                     rek = True
-        return(ref, rek)
+        if keys == '000000':
+            return(ref)
+        else :
+            return(ref, rek)
 
 # RC4 Cryptographic Tool
 class rc4(object):
@@ -291,12 +294,50 @@ def mailQuest():
         {
             'type' : 'input',
             'name' : 'mailaddr',
-            'message' : '你准备使用哪一个邮箱发送邮件？\nA>>> ',
+            'message' : '你准备使用哪一个邮箱发送邮件？\n==>>> ',
             'validate' : lambda x : is_valid(mailre, x) or '这不是一个有效的邮箱地址，请检查后重新录入。'
         }
     ]
     answers = prompt(questions, style=custom_style_2)
-    fileCryptor(answers['mailaddr'], answers[''])
+    file_ok = fileCryptor.fileValid(answers['mailaddr'])
+    if not file_ok :
+        answers.update(askPassword())
+    else :
+        questions = [
+            {
+                'type' : 'confirm',
+                'message' : '曾保存 ‘' + answers['mailaddr'] + '’这个邮箱的信息，是否使用之前保存的信息？\n==>>> ',
+                'name' : 'useSaved',
+                'default' : True
+            }
+        ]
+        tip = prompt(questions, style=custom_style_2)
+        if tip['useSaved'] :
+            answers.update(askpasskey(answers['mailaddr']))
+        else :
+            answers.update(askPassword())
+    return(answers)
+
+def askPassword():
+    questions = [
+        {
+            'type' : 'password',
+            'name' : 'passwords',
+            'message' : '请输入邮箱登陆密码(如果邮箱已经开启)。\n==>>> '
+        }
+    ]
+    answers = prompt(questions, style=custom_style_2)
+    return(answers)
+
+def askpasskey(mailname):
+    questions = [
+        {
+            'type' : 'password',
+            'name' : 'passkeys',
+            'message' : '请输入' + mailname + '报讯信息的密码。\n==>>> '
+        }
+    ]
+    answers = prompt(questions, style=custom_style_2)
     return(answers)
 
 def configmailQuest():
@@ -305,30 +346,19 @@ def configmailQuest():
         {
             'type' : 'input',
             'name' : 'smtpurl',
-            'message' : '请提供你所使用邮箱的SMTP服务器，一般可在你的邮箱设置中找到。\nA>>> ',
+            'message' : '请提供你所使用邮箱的SMTP服务器，一般可在你的邮箱设置中找到。\n==>>> ',
             'default' : 'smtp.web.com:234',
             'validate' : lambda x : is_valid(urlre, x) or '服务器地址无效，请按照“网址:端口”的格式录入。'
         },
         {
             'type' : 'password',
             'name' : 'passwords',
-            'message' : '请输入邮箱登陆密码：\nA>>> '
+            'message' : '请输入邮箱登陆密码：\n==>>> '
         }
     ]
     answers = prompt(questions, style=custom_style_2)
     answers['smtpurl'] = answers['smtpurl'].split(':')
     answers['smtpurl'][1] = int(answers['smtpurl'][1])
-    return(answers)
-
-def passkeyQuenst():
-    questions = [
-        {
-            'type' : 'password',
-            'name' : 'passkey',
-            'massage' : '\nA>>>'
-        }
-    ]
-    answers = prompt(questions, style=custom_style_2)
     return(answers)
 
 # COMMANDTOOL
@@ -342,11 +372,15 @@ def passkeyQuenst():
                 help = '邮箱的配置文件，默认不选择。')
 def do_commend(email, passkey, config):
     '''
-        Email Sender CLI in python...
-        v1.3.0
-        遵循GUN GPL3开源协议。
-        这个命令行程序
+        Email Sender CLI in python...\n
+        v2.0.1\n
+        遵循GUN GPL3开源协议。\n
+        \n
+        Copyright (C) 2019  Liangyi Zhang <zly@lyzhang.me>
     '''
+    print__('Email Sender CLI', figlet = True)
+    print__('                by Sidney Zhang <zly@lyzhang.me>', color = 'white')
+    print__('                version 2.0.1', color = 'white')
     pass
 
 # MAINSPROGRAM
