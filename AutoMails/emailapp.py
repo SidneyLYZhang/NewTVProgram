@@ -248,7 +248,7 @@ class emailApp(object):
         try:
             insv = smtplib.SMTP_SSL(self.link, self.host)
             insv.login(self.address, self.password)
-            insv.sendmail(mailtxt.sender)
+            insv.sendmail(mailtxt.sender, mailtxt.consignee, mailtxt.massages)
         except smtplib.SMTPException as e:
 	        print(e)
 
