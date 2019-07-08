@@ -285,7 +285,7 @@ class Bidator(object):
 
 # AUTHOR    : Liangyi ZHang <zly@lyzhang.me>
 # LICENSE   :
-#    Email-Sender CLI with python
+#    Class Bidaor for python on using to reading big data
 #    Copyright (C) 2019  Liangyi Zhang
 #
 #    This program is free software: you can redistribute it and/or modify
