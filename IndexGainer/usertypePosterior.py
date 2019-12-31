@@ -47,6 +47,7 @@ import time
 import random
 import psutil
 import numpy as np
+from functools import reduce
 from pympler.asizeof import asizeof
 from sklearn.preprocessing import MinMaxScaler
 from sklearn.neighbors import KernelDensity
@@ -123,7 +124,7 @@ class effectActions(object):
     def RAM_info(self, output = False, virtual_memory = False):
         data_size = asizeof(self.upshot)
         data_size += asizeof(self.__O_data)
-        data_size += asizeof(self.__effectWatchtime)
+        data_size += asizeof(self.__transfit_data)
         data_size = data_size / 1024 / 1024
         if output:
             return (data_size, psutil.virtual_memory().percent) if virtual_memory else data_size
@@ -137,7 +138,90 @@ class beyesProbability(object):
     计算多条件贝叶斯概率（已知a在s_1至s_n可能有c属性的概率，求a有c的概率。）
     '''
     def __init__(self):
+        self.__object = []
+        self.__charas = []
+        self.__subprobas = {}
+        self.probas = {}
+    
+    def __str__(self):
         pass
+    
+    def __repr__(self):
+        pass
+
+    @staticmethod
+    def merge_inter(*data, type = 'left', mode = 'plus'):
+        '''
+        用于整合多个列表。
+        *data/list : 所需合并的数据表
+        type : left/right ，列表整合方式
+        mode : plus/replace ，列表整合方法
+        例子：
+        merge_inter(a,b,c, type = 'left', mode = 'replace')
+        '''
+        if mode == 'plus':
+            if type == 'right' :
+                do_merge = lambda x , y : x + y
+            elif type == 'left' :
+                do_merge = lambda x , y : y + x
+            else :
+                raise Exception("Unknown merge-type!")
+        elif mode == 'replace' :
+            def do_func(x, y):
+                tmp = x.copy()
+                tmp[:len(y)] = y
+                return tmp
+            if type == 'left' :
+                do_merge = lambda x , y : do_func(x , y)
+            elif type == 'right' :
+                do_merge = lambda x , y : do_func(y, x)
+            else :
+                raise Exception("Unknown merge-type!")
+        else :
+            raise TypeError("Unknown compute-mode!")
+        return reduce(do_merge , data)
+    
+    def fit(self, data, instance = None):
+        if isinstance(data,dict) :
+            data_pis_set = set(list(map(lambda x : len(data[x]) , data.keys())))
+            if len(data_pis_set) == 1 :
+                length = data_pis_set.pop()
+                self.__object = list(map(str , range(length)))
+                self.__charas = list(data.keys())
+                self.__subprobas = data
+            else :
+                raise Exception('data set has wrong size!')
+        elif isinstance(data, pd.DataFrame):
+            self.__object = data.index.tolist()
+            self.__charas = data.columns.tolist()
+            self.__subprobas = dict(list(map(lambda x : (x,data[x].tolist()), data.columns)))
+        else :
+            raise Exception('data set is a unvalid data-type! Please use pyton-diction-type or pyton-pandas-DataFrame!')
+        if instance :
+            if isinstance(instance,list) :
+                if len(instance) > len(self.__object) :
+                    self.__object = self.merge_inter(self.__object, instance, mode = 'replace')
+                else :
+                    raise Exception('`instance` is too lang to have exceeded the data range.')
+            else :
+                raise TypeError('`instance` must be a list!\n')
+        self.probas = dict(zip(self.__charas , [0] * len(self.__charas)))
+        
+        def transformdata(self, mode = "approximation"):
+            '''
+            mode : "approximation", "multivariate", None
+            For "approximation" : use prob & (1-prob) to calculate this priori probability ;
+            For "multivariate" : use real values to calculate priori probabilities under multivariate function ;
+            For None : use truncated distribution to approximate this priori probability .
+            '''
+            listprod = lambda data : reduce(lambda x,y: x*y , data)
+            if mode == 'approximation':
+                self.probas[]
+            elif mode == 'multivariate':
+                self.probas[]
+            else:
+                for key, value in self.__subprobas.items():
+                    self.probas[key] = sum(value) / (listprod(value) * len(value))
 
 class bayesclassVerification(object):
     '''
