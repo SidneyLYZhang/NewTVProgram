@@ -160,5 +160,6 @@ for i in res.keys() :
             else:
                 dtmp.append([i, j])
 
- a = pd.DataFrame(dtmp, columns = ["prog","type"])
- aa = a.groupby('type').agg(len)
+a = pd.DataFrame(dtmp, columns = ["prog","type"])
+aa = a.groupby('type').agg(len)
+
