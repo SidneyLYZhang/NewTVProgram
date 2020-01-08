@@ -132,6 +132,13 @@ def getpedia(title):
         return ['']
 
 res = dict()
+for i in a :
+    try :
+        res[i] = getpedia(i)
+    except:
+        time.sleep(1)
+        continue
+
 for i in text :
     try :
         res[i] = getpedia(i)
@@ -162,4 +169,61 @@ for i in res.keys() :
 
 a = pd.DataFrame(dtmp, columns = ["prog","type"])
 aa = a.groupby('type').agg(len)
+
+res = {
+    'age' : None,
+    'education' : None,
+    'gender' : None
+}
+
+for i in data.keys() :
+    temp = dict()
+    for j in title :
+        temp[j] = data[i][j]['data']
+    res[i] = pd.DataFrame(temp, index = data[i][title[0]]['tags']).T
+
+resed = {
+    'age' : list(),
+    'education' : list(),
+    'gender' : list()
+}
+
+ress = dict()
+for i in res.keys() :
+    ress[i] = [0] * len(res[i].columns)
+    for j in range(0,20) :
+        xx = ab.iloc[j].lang
+        ress[i] = ress[i] + np.dot(res[i].loc[ab.iloc[j]['name']], xx)
+
+
+tops = ["剧情","爱情","都市","喜剧","古装"]
+
+def is_in_it(x , y) :
+    if isinstance(y, list) :
+        data = ";".join(y)
+    else :
+        data = str(y)
+    if x in data :
+        res = True
+    else :
+        res = False
+    return res
+
+top_dict = {
+    "剧情" : [],
+    "爱情" : [],
+    "都市" : [],
+    "喜剧" : [],
+    "古装" : [],
+    "other" : []
+}
+
+for i in res.keys() :
+    other = True
+    for j in tops :
+        if is_in_it(j, res[i]) :
+            top_dict[j].extend([i])
+            other = False
+    if other :
+        top_dict['other'].extend([i])
 
