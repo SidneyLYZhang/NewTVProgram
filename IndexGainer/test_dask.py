@@ -195,7 +195,6 @@ for i in res.keys() :
         xx = ab.iloc[j].lang
         ress[i] = ress[i] + np.dot(res[i].loc[ab.iloc[j]['name']], xx)
 
-
 tops = ["剧情","爱情","都市","喜剧","古装"]
 
 def is_in_it(x , y) :
@@ -226,4 +225,37 @@ for i in res.keys() :
             other = False
     if other :
         top_dict['other'].extend([i])
+
+ores = dict()
+
+def changeok(data):
+    res = dict()
+    for i in data.keys() :
+        temp = []
+        for j in data[i] :
+            temp.append(data[i][j]["data"])
+        res[i] = pd.DataFrame(temp, index= list(data[i].keys()), columns=data[i][j]["tags"])
+    return res
+
+def getdares(tydata, x) :
+    res = dict()
+    for i in tydata.keys() :
+        thistype = tydata[i].loc[x.name.tolist()]
+        res[i] = []
+        for j in thistype.columns.tolist() :
+            res[i].extend([sum(np.multiply(np.array(thistype[j]),np.array(x.lang)))])
+        res[i] = pd.Series(res[i], index = thistype.columns.tolist())
+    return res
+
+for i in top_dict.keys() :
+    data = alldata[(alldata.name.isin(top_dict[i]))]
+    alang = data.lang.sum()
+    data['lang'] = data.lang / alang
+    ores[i] = getdares(typedata, data)
+
+for i in ores.keys() :
+    with pd.ExcelWriter("E:/" +  i + "_20200108.xlsx") as ew :
+        for j in ores[i].keys() :
+            ores[i][j].to_excel(ew, sheet_name = j)
+
 

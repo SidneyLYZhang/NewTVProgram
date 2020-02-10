@@ -16,7 +16,7 @@ from email.mime.image import MIMEImage
 
 ##  日期部分：主要负责固定日期的文件发送
 def getYesterday(): 
-    today=dte.date.today() 
+    today=dte.date.today()
     oneday=dte.timedelta(days=1) 
     yesterday=today-oneday  
     return(time.strftime('%Y%m%d',time.strptime(str(yesterday),"%Y-%m-%d")))
