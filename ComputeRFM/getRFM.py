@@ -43,19 +43,19 @@ class getRFM(object):
         3. 重要深耕用户     (1,0,1)
         4. 重要挽留用户     (0,0,1)
         5. 潜力用户         (1,1,0)
-        6. 新付费用户       (0,1,0)
+        6. 兴趣增长用户     (0,1,0)
         7. 一般用户         (1,0,0)
         8. 流失用户         (0,0,0)
     '''
     __slots__ = ['__data', '__theRFM', '__coreColu', '__bins', '__compare', '__noCalc']
-    def __init__(self, data, r = "Recency", f = "Frequency", m = "Monetary", byScore = False, *argv, **kwargs):
+    def __init__(self, data, r = "Recency", f = "Frequency", m = "Monetary", byScore = False, fargv = None, **kwargs):
         self.__data = data.copy()
         self.__theRFM = pd.Series([r,f,m], index=['r','f','m'])
-        self.__coreColu = pd.Series(list(map(lambda x:x+'.score', self.__theRFM.tolist())) if byScore else self.__theRFM.tolist(), 
+        self.__coreColu = pd.Series(list(map(lambda x: x+'.score', self.__theRFM.tolist())) if byScore else self.__theRFM.tolist(), 
                                     index=['r','f','m'])
         self.__bins = {}
         dcfromkeys = lambda x,y,z: dict(map(lambda a,b: (a,x.get(a,b)),y,z))
-        self.__compare = {'func': argv if argv else np.mean}
+        self.__compare = {'func': fargv if fargv else np.mean}
         pargs = dcfromkeys(kwargs,["dr", "df", "dm", "ascending"],[3,3,3,True])
         cargs = dcfromkeys(kwargs,['direction'],['large'])
         self.__compare.update({'pargs':pargs})
@@ -70,7 +70,7 @@ class getRFM(object):
         def tranlate(x):
             code = [(1,1,1),(0,1,1),(1,0,1),(0,0,1),(1,1,0),(0,1,0),(1,0,0),(0,0,0)]
             title = ['高价值用户','重要换回用户','重要深耕用户','重要挽留用户',
-                        '潜力用户','新付费用户','一般用户','流失用户']
+                        '潜力用户','兴趣增长用户','一般用户','流失用户']
             index = code.index(x)
             return(title[index] if trans else (index+1))
         res['RFM.Type'] = res.apply(lambda x : tranlate(tuple(x)), axis = 1)
@@ -124,11 +124,14 @@ class getRFM(object):
                 tmp = keydata.quantile([0.1,0.3,0.35,0.65,0.7,0.9])
                 tmp.index = ['10%','30%','35%','65%','70%','90%']
                 tmp = keydata.describe().append(tmp).loc[bins[d[i]]]
-                tmp = tmp[self.__theRFM[i]].tolist().sort()
+                tmp = tmp[self.__theRFM[i]].tolist()
+                tmp.sort()
             else :
                 tmp = list(set(d[i] + [0,1]))
                 tmp.sort()
-                tmp = keydata.quantile(tmp)[self.__theRFM[i]].tolist().sort()
+                tmp = keydata.quantile(tmp)[self.__theRFM[i]].tolist()
+                tmp.sort()
+            tmp[tmp.index(min(tmp))] += -0.1
             self.__bins[i] = tmp if sl[i] else tmp[::-1]
         self.__calcScore()
     def __doCompares(self, funs, direction = "large"):
@@ -146,7 +149,6 @@ class getRFM(object):
             sl = dict(zip(['r','f','m'],direction))
         else :
             sl = dict(zip(['r','f','m'],[direction]*3))
-        # byScore = True if list(filter(lambda x : '.score' in x, self.__coreColu)) else False
         def docomp(x):
             d = self.__data[self.__coreColu[x]]
             cbin = [-0.01, fs[x](d), max(d)]
@@ -158,6 +160,7 @@ class getRFM(object):
         for i in ['r','f','m']:
             self.__data[self.__coreColu[i]] = pd.cut(self.__data[self.__theRFM[i]], 
                                                         bins=self.__bins[i], labels = range(1,len(self.__bins[i])))
+            self.__data[self.__coreColu[i]] = self.__data[self.__coreColu[i]].astype('float')
     def setPartition(self, dr = 3, df = 3, dm = 3, ascending = True):
         self.__compare['pargs'].update({
             'dr':dr, 'df':df, 'dm':dm,
@@ -174,17 +177,48 @@ class getRFM(object):
             self.__calcScore()
         self.__doCompares(self.__compare['func'], **self.__compare['cargs'])
         self.__noCalc = False
-    def describe(self):
+    def describe(self, RFM_type = None, output = False):
+        if self.__noCalc :
+            self.compute()
         # 全统计数据
+        desc = {'初始数据': self.__data[self.__theRFM.tolist()]}
+        if self.__theRFM.tolist() == self.__coreColu.tolist() :
+            columns = self.__theRFM.tolist()
+        else :
+            columns = self.__theRFM.tolist() + self.__coreColu.tolist()
+            desc['Score数据'] = self.__data[self.__coreColu.tolist()]
+        columns = columns + list(map(lambda x: x+'.RFMcode', self.__theRFM.tolist()))
+        keydata = self.__data[columns]
+        desc['统计数据'] = keydata.describe()
+        desc['RFM数据'] = self()
+        columns = columns + list(map(lambda x: x+'.Result', self.__theRFM.tolist())) + ['RFM.Type']
+        keydata = pd.concat([keydata, self()], axis=1)
         # 分类人数
+        desc['RFM分类的人数统计'] = keydata.groupby('RFM.Type').agg({'RFM.Type':'count'})
         # 可指定某个分类的统计情况
-        pass
+        if RFM_type :
+            if isinstance(RFM_type, list) :
+                for i in RFM_type :
+                    tipdata = keydata[keydata['RFM.Type']==i]
+                    desc['用户类型 '+str(i)+' 统计'] = tipdata.describe()
+            else :
+                tipdata = keydata[keydata['RFM.Type']==RFM_type]
+                desc['用户类型 '+str(RFM_type)+' 统计'] = tipdata.describe()
+        # 输出结果
+        if output :
+            return(desc)
+        else :
+            res = list(map(lambda x : x + '\n\t' +str(desc[x]).replace('\n','\n\t'), desc.keys()))
+            res = reduce(lambda x,y: x+'\n'+y, res)
+            print(res)
     def getInfo(self, output = False):
         # 展示关键中间结果：byScore为True时，展示Score值，否则展示rfm原始数据。
         return self.__data[self.__coreColu.tolist()]
+    # functions for Testing
+    # def getBin(self):
+    #     return(self.__bins)
     def test(self):
         return(self.__data)
-
 
 ################################################
 #                 MAINPROGRAM                  #
